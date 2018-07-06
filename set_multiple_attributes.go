@@ -13,6 +13,11 @@ const setMultipleAttributes = "https://app.userengage.com/api/public/users/%d/se
 // Attributes contains attributes which are going to be changed
 type Attributes map[string]interface{}
 
+// setMultipleAttributesResponse contains possible errors in request
+type setMultipleAttributesResponse struct {
+	Errors *json.RawMessage `json:"errors"`
+}
+
 // SetMultipleAttributes is an method used for setting multiple user attributes
 func (c Client) SetMultipleAttributes(ctx context.Context, userID int,
 	attr Attributes) error {
@@ -30,6 +35,10 @@ func (c Client) SetMultipleAttributes(ctx context.Context, userID int,
 	request.Header.Set("Authorization", "Token "+c.apikey)
 	request.Header.Set("Content-Type", "application/json")
 
-	_, err = http.DefaultClient.Do(request.WithContext(ctx))
-	return err
+	resp, err := http.DefaultClient.Do(request.WithContext(ctx))
+	if err != nil {
+		return err
+	}
+
+	return statusErrors[resp.StatusCode]
 }

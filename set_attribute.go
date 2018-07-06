@@ -33,6 +33,10 @@ func (c Client) SetAttribute(ctx context.Context, userID int, attr Attribute) er
 	request.Header.Set("Authorization", "Token "+c.apikey)
 	request.Header.Set("Content-Type", "application/json")
 
-	_, err = http.DefaultClient.Do(request.WithContext(ctx))
-	return err
+	resp, err := http.DefaultClient.Do(request.WithContext(ctx))
+	if err != nil {
+		return err
+	}
+
+	return statusErrors[resp.StatusCode]
 }

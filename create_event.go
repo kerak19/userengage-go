@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 )
 
@@ -15,6 +16,11 @@ type CreateEvent struct {
 	Timestamp uint64                 `json:"timestamp"`
 	Client    int                    `json:"client"`
 	Data      map[string]interface{} `json:"data"`
+}
+
+// createEventResponse contains possible errors in request
+type createEventResponse struct {
+	Errors *json.RawMessage `json:"errors"`
 }
 
 // CreateEvent creates event using user id
@@ -33,6 +39,21 @@ func (c Client) CreateEvent(ctx context.Context, event CreateEvent) error {
 	request.Header.Set("Authorization", "Token "+c.apikey)
 	request.Header.Set("Content-Type", "application/json")
 
-	_, err = http.DefaultClient.Do(request.WithContext(ctx))
-	return err
+	resp, err := http.DefaultClient.Do(request.WithContext(ctx))
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+
+	var eventResponse createEventResponse
+	err = json.NewDecoder(resp.Body).Decode(&eventResponse)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode == 400 && eventResponse.Errors != nil {
+		return errors.New(string(*eventResponse.Errors))
+	}
+	return statusErrors[resp.StatusCode]
 }

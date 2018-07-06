@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 )
@@ -12,6 +13,9 @@ const updateUserEndpoint = "https://app.userengage.com/api/public/users/%d/"
 
 // UpdateUser is an type used for Updating user information
 type UpdateUser = CreateUser
+
+// updateUserResponse is an struct containing response from userengage update user endpoint
+type updateUserResponse = CreateUserResponse
 
 // UpdateUser is an method used for updating user information
 func (c Client) UpdateUser(ctx context.Context, userID int, user UpdateUser) error {
@@ -29,6 +33,20 @@ func (c Client) UpdateUser(ctx context.Context, userID int, user UpdateUser) err
 	request.Header.Set("Authorization", "Token "+c.apikey)
 	request.Header.Set("Content-Type", "application/json")
 
-	_, err = http.DefaultClient.Do(request.WithContext(ctx))
-	return err
+	resp, err := http.DefaultClient.Do(request.WithContext(ctx))
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+	var updateResponse updateUserResponse
+	err = json.NewDecoder(resp.Body).Decode(&updateResponse)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode == 400 && updateResponse.Errors != nil {
+		return errors.New(string(*updateResponse.Errors))
+	}
+	return statusErrors[resp.StatusCode]
 }

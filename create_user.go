@@ -16,7 +16,7 @@ type CreateUser struct {
 	Phone     string `json:"phone_number,omitempty"`
 	FirstName string `json:"first_name,omitempty"`
 	LastName  string `json:"last_name,omitempty"`
-	Gender    *int   `json:"gender"`
+	Gender    int    `json:"gender,omitempty"`
 	LastIP    string `json:"last_ip,omitempty"`
 	City      string `json:"city,omitempty"`
 	Region    string `json:"region,omitempty"`
