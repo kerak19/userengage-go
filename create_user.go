@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 )
 
@@ -15,7 +16,7 @@ type CreateUser struct {
 	Phone     string `json:"phone_number,omitempty"`
 	FirstName string `json:"first_name,omitempty"`
 	LastName  string `json:"last_name,omitempty"`
-	Gender    int    `json:"gender,omitempty"`
+	Gender    *int   `json:"gender"`
 	LastIP    string `json:"last_ip,omitempty"`
 	City      string `json:"city,omitempty"`
 	Region    string `json:"region,omitempty"`
@@ -28,7 +29,8 @@ type CreateUser struct {
 
 // CreateUserResponse is an struct containing response from userengage
 type CreateUserResponse struct {
-	ID int `json:"id"`
+	ID     int              `json:"id"`
+	Errors *json.RawMessage `json:"errors"`
 }
 
 // CreateUser creates user with data provided in CreateUser struct
@@ -53,7 +55,16 @@ func (c Client) CreateUser(ctx context.Context, user CreateUser) (CreateUserResp
 	if err != nil {
 		return createResponse, err
 	}
+
 	defer resp.Body.Close()
 	err = json.NewDecoder(resp.Body).Decode(&createResponse)
-	return createResponse, err
+	if err != nil {
+		return createResponse, err
+	}
+
+	if resp.StatusCode == 400 && createResponse.Errors != nil {
+		return createResponse, errors.New(string(*createResponse.Errors))
+	}
+
+	return createResponse, statusErrors[resp.StatusCode]
 }
