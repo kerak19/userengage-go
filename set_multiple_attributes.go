@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 )
@@ -40,5 +41,15 @@ func (c Client) SetMultipleAttributes(ctx context.Context, userID int,
 		return err
 	}
 
+	defer resp.Body.Close()
+	var setMultipleAttributesResponse setMultipleAttributesResponse
+	err = json.NewDecoder(resp.Body).Decode(&setMultipleAttributesResponse)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode == 400 && setMultipleAttributesResponse.Errors != nil {
+		return errors.New(string(*setMultipleAttributesResponse.Errors))
+	}
 	return statusErrors[resp.StatusCode]
 }

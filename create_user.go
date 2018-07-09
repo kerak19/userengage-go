@@ -65,6 +65,5 @@ func (c Client) CreateUser(ctx context.Context, user CreateUser) (CreateUserResp
 	if resp.StatusCode == 400 && createResponse.Errors != nil {
 		return createResponse, errors.New(string(*createResponse.Errors))
 	}
-
 	return createResponse, statusErrors[resp.StatusCode]
 }
