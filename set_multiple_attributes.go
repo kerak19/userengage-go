@@ -32,10 +32,12 @@ func (c Client) SetMultipleAttributes(ctx context.Context, userID int,
 		return err
 	}
 
+	client := http.Client{}
+
 	request.Header.Set("Authorization", "Token "+c.apikey)
 	request.Header.Set("Content-Type", "application/json")
 
-	resp, err := http.DefaultClient.Do(request.WithContext(ctx))
+	resp, err := client.Do(request.WithContext(ctx))
 	if err != nil {
 		return err
 	}

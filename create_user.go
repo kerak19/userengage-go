@@ -6,26 +6,28 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 )
 
 const createUserEndpoint = "https://app.userengage.com/api/public/users/"
 
 // CreateUser is an struct used for creation of user
 type CreateUser struct {
-	Email     string `json:"email,omitempty"`
-	Phone     string `json:"phone_number,omitempty"`
-	FirstName string `json:"first_name,omitempty"`
-	LastName  string `json:"last_name,omitempty"`
-	Status    int    `json:"status,omitempty"`
-	Gender    int    `json:"gender,omitempty"`
-	LastIP    string `json:"last_ip,omitempty"`
-	City      string `json:"city,omitempty"`
-	Region    string `json:"region,omitempty"`
-	Country   string `json:"country,omitempty"`
-	Facebook  string `json:"facebook_url,omitempty"`
-	Linkedin  string `json:"linkedin_url,omitempty"`
-	Twitter   string `json:"twitter_url,omitempty"`
-	Google    string `json:"google_url,omitempty"`
+	Email     string    `json:"email,omitempty"`
+	Phone     string    `json:"phone_number,omitempty"`
+	FirstName string    `json:"first_name,omitempty"`
+	LastName  string    `json:"last_name,omitempty"`
+	Status    int       `json:"status,omitempty"`
+	Gender    int       `json:"gender,omitempty"`
+	LastIP    string    `json:"last_ip,omitempty"`
+	LastSeen  time.Time `json:"last_seen,omitempty"`
+	City      string    `json:"city,omitempty"`
+	Region    string    `json:"region,omitempty"`
+	Country   string    `json:"country,omitempty"`
+	Facebook  string    `json:"facebook_url,omitempty"`
+	Linkedin  string    `json:"linkedin_url,omitempty"`
+	Twitter   string    `json:"twitter_url,omitempty"`
+	Google    string    `json:"google_url,omitempty"`
 }
 
 // CreateUserResponse is an struct containing response from userengage
@@ -49,10 +51,12 @@ func (c Client) CreateUser(ctx context.Context, user CreateUser) (CreateUserResp
 		return createResponse, err
 	}
 
+	client := http.Client{}
+
 	request.Header.Set("Authorization", "Token "+c.apikey)
 	request.Header.Set("Content-Type", "application/json")
 
-	resp, err := http.DefaultClient.Do(request.WithContext(ctx))
+	resp, err := client.Do(request.WithContext(ctx))
 	if err != nil {
 		return createResponse, err
 	}
