@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 )
 
 const setMultipleAttributes = "https://app.userengage.com/api/public/users/%d/set_multiple_attributes/"
@@ -16,6 +17,15 @@ type Attributes map[string]interface{}
 // setMultipleAttributesResponse contains possible errors in request
 type setMultipleAttributesResponse struct {
 	Errors *json.RawMessage `json:"errors"`
+}
+
+// SetMultipleAttributesTimeout is an method used for setting multiple user attributes
+func (c Client) SetMultipleAttributesTimeout(ctx context.Context, timeout time.Duration,
+	userID int, attr Attributes) error {
+	timeoutCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	return c.SetMultipleAttributes(timeoutCtx, userID, attr)
 }
 
 // SetMultipleAttributes is an method used for setting multiple user attributes

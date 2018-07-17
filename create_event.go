@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 )
 
 const createEventEndpoint = "https://app.userengage.com/api/public/events/"
@@ -21,6 +22,15 @@ type CreateEvent struct {
 // createEventResponse contains possible errors in request
 type createEventResponse struct {
 	Errors *json.RawMessage `json:"errors"`
+}
+
+// CreateEventTimeout creates event using user id
+func (c Client) CreateEventTimeout(ctx context.Context, timeout time.Duration,
+	event CreateEvent) error {
+	timeoutCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	return c.CreateEvent(timeoutCtx, event)
 }
 
 // CreateEvent creates event using user id

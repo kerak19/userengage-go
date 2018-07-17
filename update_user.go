@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 )
 
 const updateUserEndpoint = "https://app.userengage.com/api/public/users/%d/"
@@ -16,6 +17,15 @@ type UpdateUser = CreateUser
 
 // updateUserResponse is an struct containing response from userengage update user endpoint
 type updateUserResponse = CreateUserResponse
+
+// UpdateUserTimeout is an method used for updating user information
+func (c Client) UpdateUserTimeout(ctx context.Context, timeout time.Duration, userID int,
+	user UpdateUser) error {
+	timeoutCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	return c.UpdateUser(timeoutCtx, userID, user)
+}
 
 // UpdateUser is an method used for updating user information
 func (c Client) UpdateUser(ctx context.Context, userID int, user UpdateUser) error {

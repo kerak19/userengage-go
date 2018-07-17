@@ -37,6 +37,15 @@ type CreateUserResponse struct {
 	Errors *json.RawMessage `json:"errors"`
 }
 
+// CreateUserTimeout creates user with data provided in CreateUser struct
+func (c Client) CreateUserTimeout(ctx context.Context, timeout time.Duration,
+	user CreateUser) (CreateUserResponse, error) {
+	timeoutCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	return c.CreateUser(timeoutCtx, user)
+}
+
 // CreateUser creates user with data provided in CreateUser struct
 func (c Client) CreateUser(ctx context.Context, user CreateUser) (CreateUserResponse, error) {
 	var createResponse CreateUserResponse

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 )
 
 const setAttributeEndpoint = "https://app.userengage.com/api/public/users/%d/set_attribute/"
@@ -19,6 +20,15 @@ type Attribute struct {
 // setAttributesResponse contains possible errors in request
 type setAttributesResponse struct {
 	Errors *json.RawMessage `json:"errors"`
+}
+
+// SetAttributeTimeout set's provided attribute for provided user
+func (c Client) SetAttributeTimeout(ctx context.Context, timeout time.Duration, userID int,
+	attr Attribute) error {
+	timeoutCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	return c.SetAttribute(timeoutCtx, userID, attr)
 }
 
 // SetAttribute set's provided attribute for provided user
