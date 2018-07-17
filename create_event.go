@@ -45,7 +45,6 @@ func (c Client) CreateEvent(ctx context.Context, event CreateEvent) error {
 	if err != nil {
 		return err
 	}
-
 	defer resp.Body.Close()
 
 	var eventResponse createEventResponse

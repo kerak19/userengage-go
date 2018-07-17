@@ -39,8 +39,8 @@ func (c Client) UpdateUser(ctx context.Context, userID int, user UpdateUser) err
 	if err != nil {
 		return err
 	}
-
 	defer resp.Body.Close()
+
 	var updateResponse updateUserResponse
 	err = json.NewDecoder(resp.Body).Decode(&updateResponse)
 	if err != nil {

@@ -61,8 +61,8 @@ func (c Client) CreateUser(ctx context.Context, user CreateUser) (CreateUserResp
 	if err != nil {
 		return createResponse, err
 	}
-
 	defer resp.Body.Close()
+
 	err = json.NewDecoder(resp.Body).Decode(&createResponse)
 	if err != nil {
 		return createResponse, err

@@ -41,6 +41,7 @@ func (c Client) SetMultipleAttributes(ctx context.Context, userID int,
 	if err != nil {
 		return err
 	}
+	resp.Body.Close()
 
 	return statusErrors[resp.StatusCode]
 }

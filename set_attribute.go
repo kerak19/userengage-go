@@ -44,6 +44,7 @@ func (c Client) SetAttribute(ctx context.Context, userID int, attr Attribute) er
 	if err != nil {
 		return err
 	}
+	resp.Body.Close()
 
 	return statusErrors[resp.StatusCode]
 }
