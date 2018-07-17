@@ -20,6 +20,7 @@ type CreateUser struct {
 	Status    int       `json:"status,omitempty"`
 	Gender    int       `json:"gender,omitempty"`
 	LastIP    string    `json:"last_ip,omitempty"`
+	FirstSeen time.Time `json:"first_seen,omitempty"`
 	LastSeen  time.Time `json:"last_seen,omitempty"`
 	City      string    `json:"city,omitempty"`
 	Region    string    `json:"region,omitempty"`
