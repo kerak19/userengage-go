@@ -4,13 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"time"
-)
 
-const updateUserEndpoint = "https://app.userengage.com/api/public/users/%d/"
+	"github.com/pkg/errors"
+)
 
 // UpdateUser is an type used for Updating user information
 type UpdateUser = CreateUser
@@ -27,25 +26,65 @@ func (c Client) UpdateUserTimeout(ctx context.Context, timeout time.Duration, us
 	return c.UpdateUser(timeoutCtx, userID, user)
 }
 
+const updateUserEndpoint = "/users/%d/"
+
 // UpdateUser is an method used for updating user information
 func (c Client) UpdateUser(ctx context.Context, userID int, user UpdateUser) error {
 	payload, err := json.Marshal(user)
 	if err != nil {
 		return err
 	}
-	requestBody := bytes.NewBuffer(payload)
-	request, err := http.NewRequest(http.MethodPut,
-		fmt.Sprintf(updateUserEndpoint, userID), requestBody)
+
+	// https://app.userengage.com/api/public/users/:id/
+	endpoint := c.apiPrefix + updateUserEndpoint
+
+	body := bytes.NewBuffer(payload)
+	r, err := http.NewRequest(http.MethodPut, fmt.Sprintf(endpoint, userID), body)
 	if err != nil {
 		return err
 	}
 
+	return c.requestUserUpdate(r.WithContext(ctx))
+}
+
+// UpdateUserCustomUserID is an type used for Updating user information
+type UpdateUserCustomUserID = CreateOrUpdateUser
+
+// UpdateUserCustomUserIDTimeout is an method used for updating user information
+func (c Client) UpdateUserCustomUserIDTimeout(ctx context.Context, timeout time.Duration, user UpdateUserCustomUserID) error {
+	timeoutCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	return c.UpdateUserCustomUserID(timeoutCtx, user)
+}
+
+const updateUserCustomUserIDEndpoint = "/users-by-id/%s/"
+
+// UpdateUserCustomUserID updates user's information using custom user ID
+func (c Client) UpdateUserCustomUserID(ctx context.Context, user UpdateUserCustomUserID) error {
+	payload, err := json.Marshal(user)
+	if err != nil {
+		return errors.WithMessage(err, "error while marshaling update user payload")
+	}
+
+	endpoint := c.apiPrefix + updateUserCustomUserIDEndpoint
+
+	body := bytes.NewBuffer(payload)
+	r, err := http.NewRequest(http.MethodPut, fmt.Sprintf(endpoint, user.UserID), body)
+	if err != nil {
+		return err
+	}
+
+	return c.requestUserUpdate(r.WithContext(ctx))
+}
+
+func (c Client) requestUserUpdate(r *http.Request) error {
 	client := http.Client{}
 
-	request.Header.Set("Authorization", "Token "+c.apikey)
-	request.Header.Set("Content-Type", "application/json")
+	r.Header.Set("Authorization", "Token "+c.apiKey)
+	r.Header.Set("Content-Type", "application/json")
 
-	resp, err := client.Do(request.WithContext(ctx))
+	resp, err := client.Do(r)
 	if err != nil {
 		return err
 	}

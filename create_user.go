@@ -9,8 +9,6 @@ import (
 	"time"
 )
 
-const createUserEndpoint = "https://app.userengage.com/api/public/users/"
-
 // CreateUser is an struct used for creation of user
 type CreateUser struct {
 	Email     string    `json:"email,omitempty"`
@@ -46,27 +44,74 @@ func (c Client) CreateUserTimeout(ctx context.Context, timeout time.Duration,
 	return c.CreateUser(timeoutCtx, user)
 }
 
+const createUserEndpoint = "/users/"
+
 // CreateUser creates user with data provided in CreateUser struct
 func (c Client) CreateUser(ctx context.Context, user CreateUser) (CreateUserResponse, error) {
-	var createResponse CreateUserResponse
-
 	payload, err := json.Marshal(user)
 	if err != nil {
-		return createResponse, err
+		return CreateUserResponse{}, err
 	}
 
-	requestBody := bytes.NewBuffer(payload)
-	request, err := http.NewRequest(http.MethodPost, createUserEndpoint, requestBody)
+	// https://app.userengage.com/api/public/users/
+	endpoint := c.apiPrefix + createUserEndpoint
+
+	body := bytes.NewBuffer(payload)
+	r, err := http.NewRequest(http.MethodPost, endpoint, body)
 	if err != nil {
-		return createResponse, err
+		return CreateUserResponse{}, err
 	}
+
+	return c.requestUserCreation(r.WithContext(ctx))
+}
+
+// CreateOrUpdateUser is an struct used for creation or updating an user
+type CreateOrUpdateUser struct {
+	UserID string `json:"user_id"` // custom user ID
+	CreateUser
+}
+
+// CreateOrUpdateUserTimeout creates user with provided UserID. If user with this ID
+// already exist, it'll update it instead
+func (c Client) CreateOrUpdateUserTimeout(ctx context.Context, timeout time.Duration,
+	user CreateOrUpdateUser) (CreateUserResponse, error) {
+	timeoutCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	return c.CreateOrUpdateUser(timeoutCtx, user)
+}
+
+const createOrUpdateUserEndpoint = "/users/update_or_create/"
+
+// CreateOrUpdateUser creates user with provided UserID. If user with this ID
+// already exist, it'll update it instead
+func (c Client) CreateOrUpdateUser(ctx context.Context, user CreateOrUpdateUser) (CreateUserResponse, error) {
+	payload, err := json.Marshal(user)
+	if err != nil {
+		return CreateUserResponse{}, err
+	}
+
+	// https://app.userengage.com/api/public/users/update_or_create/
+	endpoint := c.apiPrefix + createOrUpdateUserEndpoint
+
+	body := bytes.NewBuffer(payload)
+	r, err := http.NewRequest(http.MethodPost, endpoint, body)
+	if err != nil {
+		return CreateUserResponse{}, err
+	}
+
+	return c.requestUserCreation(r.WithContext(ctx))
+}
+
+func (c Client) requestUserCreation(r *http.Request) (CreateUserResponse, error) {
+	var createResponse CreateUserResponse
 
 	client := http.Client{}
 
-	request.Header.Set("Authorization", "Token "+c.apikey)
-	request.Header.Set("Content-Type", "application/json")
+	r.Header.Set("Authorization", "Token "+c.apiKey)
+	r.Header.Set("Content-Type", "application/json")
 
-	resp, err := client.Do(request.WithContext(ctx))
+	resp, err := client.Do(r)
 	if err != nil {
 		return createResponse, err
 	}
@@ -80,5 +125,6 @@ func (c Client) CreateUser(ctx context.Context, user CreateUser) (CreateUserResp
 	if resp.StatusCode == 400 && createResponse.Errors != nil {
 		return createResponse, errors.New(string(*createResponse.Errors))
 	}
+
 	return createResponse, statusErrors[resp.StatusCode]
 }

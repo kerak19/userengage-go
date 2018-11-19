@@ -2,12 +2,14 @@ package userengage
 
 // Client is an client used for communication with userengage api
 type Client struct {
-	apikey string
+	apiKey    string
+	apiPrefix string
 }
 
 // New creates new Client with provided api key
-func New(apikey string) Client {
+func New(APIKey string) Client {
 	return Client{
-		apikey: apikey,
+		apiKey:    APIKey,
+		apiPrefix: "https://app.userengage.com/api/public",
 	}
 }
